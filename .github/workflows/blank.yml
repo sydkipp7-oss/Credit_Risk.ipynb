@@ -1,0 +1,70 @@
+import streamlit as st
+import joblib
+import numpy as np
+from sklearn.datasets import fetch_openml
+import pandas as pd
+
+st.title("🏦 Credit Risk Intelligence System (RBC Style)")
+
+# Load model
+model = joblib.load("model.pkl")
+scaler = joblib.load("scaler.pkl")
+
+# Load data for demo
+data = fetch_openml("credit-g", version=1, as_frame=True)
+df = pd.get_dummies(data.frame, drop_first=True)
+
+X = df.drop("class_good", axis=1)
+
+st.subheader("Select Customer")
+
+index = st.slider("Customer Index", 0, len(X)-1, 0)
+
+sample = X.iloc[index].values.reshape(1, -1)
+sample_scaled = scaler.transform(sample)
+
+prob = model.predict_proba(sample_scaled)[0][1]
+
+st.metric("Risk Score", round(prob, 2))
+
+if prob > 0.7:
+    st.error("High Risk Customer")
+elif prob > 0.4:
+    st.warning("Medium Risk Customer")
+else:
+    st.success("Low Risk Customer")# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+
+      # Runs a single command using the runners shell
+      - name: Run a one-line script
+        run: echo Hello, world!
+
+      # Runs a set of commands using the runners shell
+      - name: Run a multi-line script
+        run: | 
+          echo Add other actions to build,
+          echo test, and deploy your project.
